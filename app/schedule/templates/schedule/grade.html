@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оцінити урок — {{ lesson.group.name }} — Seven Stars School{% endblock %}
+
+{% block extra_css %}
+        .participation-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: #fff;
+            border: 2px solid #F0EBEF;
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 10px;
+        }
+
+        .participation-name {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text);
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .participation-score-input {
+            width: 90px;
+            flex-shrink: 0;
+            padding: 10px 14px;
+            border: 2px solid #ECE3EA;
+            border-radius: 16px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .participation-score-input:focus {
+            outline: none;
+            border-color: var(--orange);
+        }
+
+        .participation-score-input:disabled {
+            background: #F5F2F5;
+            color: #9C919B;
+            cursor: not-allowed;
+        }
+
+        .participation-absent-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-header">
+    <a href="{% url 'schedule' %}" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Розклад
+    </a>
+    <h1>Оцінити урок</h1>
+    <div class="detail-meta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        {{ lesson.group.name }} — {{ lesson_date|date:"d.m.Y" }}, {{ lesson.start_time|date:"H:i" }}
+    </div>
+</div>
+
+<div class="detail-single">
+    <div class="content-card">
+        <div class="panel-title">Оцінки за урок (0–50)</div>
+
+        <form method="post" class="grade-participation-form">
+            {% csrf_token %}
+
+            {% if students_with_scores %}
+                {% for item in students_with_scores %}
+                <div class="participation-row">
+                    <span class="participation-name">
+                        {{ item.student.user.get_full_name }}
+                        {% if item.visiting_from %}
+                            <span class="status-badge status-pending" style="margin-left: 6px;">гість: {{ item.visiting_from.name }}</span>
+                        {% endif %}
+                        {% if item.custom_makeup %}
+                            <span class="status-badge status-pending" style="margin-left: 6px;">відпрацювання: {{ item.custom_makeup.makeup_date|date:"d.m" }}, {{ item.custom_makeup.makeup_start_time|date:"H:i" }}–{{ item.custom_makeup.makeup_end_time|date:"H:i" }}</span>
+                        {% endif %}
+                    </span>
+                    <label class="participation-absent-label">
+                        <input
+                            type="checkbox"
+                            name="is_absent_{{ item.student.id }}"
+                            {% if item.is_absent %}checked{% endif %}
+                        />
+                        Відсутній
+                    </label>
+                    <input
+                        type="number"
+                        name="score_{{ item.student.id }}"
+                        class="participation-score-input"
+                        min="0"
+                        max="50"
+                        value="{{ item.score|default_if_none:'' }}"
+                        placeholder="—"
+                    />
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="list-card-empty">У групі поки немає учнів.</div>
+            {% endif %}
+
+            <button type="submit" class="btn-block" style="margin-top: 16px;">Зберегти оцінки</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.grade-participation-form .participation-row').forEach(function (row) {
+        var checkbox = row.querySelector('input[type="checkbox"]');
+        var scoreInput = row.querySelector('input[type="number"]');
+        if (!checkbox || !scoreInput) return;
+
+        var syncFromCheckbox = function () {
+            if (checkbox.checked) {
+                scoreInput.value = '';
+                scoreInput.disabled = true;
+            } else {
+                scoreInput.disabled = false;
+            }
+        };
+
+        checkbox.addEventListener('change', syncFromCheckbox);
+        scoreInput.addEventListener('input', function () {
+            if (scoreInput.value.trim() !== '') {
+                checkbox.checked = false;
+            }
+        });
+
+        syncFromCheckbox();
+    });
+</script>
+{% endblock %}

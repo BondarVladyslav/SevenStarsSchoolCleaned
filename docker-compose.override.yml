@@ -1,0 +1,10 @@
+services:
+  web:
+    volumes:
+      - ./app:/app
+    command: python manage.py runserver 0.0.0.0:8000
+
+  nginx:
+    volumes:
+      - ./nginx/conf.d.local:/etc/nginx/conf.d:ro
+      - staticfiles:/app/staticfiles:ro
