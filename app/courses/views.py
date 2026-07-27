@@ -474,7 +474,7 @@ def detail_student(request, group_id, student_id):
             'submission': submissions_by_homework_id.get(homework.id),
             'lesson_participation': lesson_participation,
         })
-
+    standalone_lesson_limit = 8
     standalone_lesson_grades = [
         p for p in lesson_participations
         if (p.lesson_id, p.lesson_date) not in homework_occurrences
@@ -483,7 +483,7 @@ def detail_student(request, group_id, student_id):
 
     context = {
         'student_homeworks': student_homeworks,
-        'standalone_lesson_grades': standalone_lesson_grades,
+        'standalone_lesson_grades': standalone_lesson_grades[:standalone_lesson_limit],
         'group': group,
         'student': student,
         'conversation_messages': conversation.messages.select_related('sender').order_by('-id')[:100],

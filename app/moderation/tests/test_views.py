@@ -630,7 +630,6 @@ class ManageStudentAbsencesViewTests(TestCase):
 
     def test_cannot_add_absence_for_lesson_outside_students_groups(self):
 
-
         other_subject = Subject.objects.create(name='Англійська')
         other_group = Group.objects.create(name='Group B', subject=other_subject)
         foreign_lesson = Lesson.objects.create(

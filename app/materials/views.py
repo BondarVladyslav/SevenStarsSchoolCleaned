@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, get_object_or_404, redirect
-
 from courses.templatetags.file_extras import is_image
 from SevenStarsSchool.storage_utils import presigned_download_url
 from .models import Material, MaterialFile
